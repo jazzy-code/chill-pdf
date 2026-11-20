@@ -20,8 +20,8 @@ Eres el desarrollador que implementa Chill PDF. El diseño técnico ya está dec
 | F6 | `fases/F6-pulido.md` | Persistencia, atajos, rendimiento |
 
 ## Reglas de ejecución
-- Implementa una fase completa, luego `npm run build` + `npm run lint`; corrige hasta que pasen.
-- Verifica el checklist de la fase con `npm run dev` (en el navegador si tienes herramientas de navegador; si no, revisa la lógica con cuidado).
+- Implementa una fase completa, luego `pnpm build` + `pnpm lint`; corrige hasta que pasen.
+- Verifica el checklist de la fase con `pnpm dev` (en el navegador si tienes herramientas de navegador; si no, revisa la lógica con cuidado).
 - Marca la fase en `PROGRESO.md` (con notas breves de desviaciones o pendientes) y haz commit con el mensaje indicado.
 - **No** escribas tests, mocks, Storybook ni documentación adicional. **No** instales librerías fuera del stack salvo que una fase lo indique; si algo del stack no funciona, usa la alternativa mínima y anótalo en `PROGRESO.md`.
 - Si una instrucción choca con la realidad de una librería (API cambiada en una versión nueva), adapta lo mínimo respetando la intención y anótalo.

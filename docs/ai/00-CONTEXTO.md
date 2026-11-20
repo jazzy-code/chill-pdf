@@ -258,4 +258,4 @@ export const pageRotation = (page: PDFPage) => ((page.getRotation().angle % 360)
 - Componentes funcionales, `'use client'` donde haya estado/efectos.
 - Nada de `any` salvo donde las libs lo obliguen.
 - No crear archivos fuera de la estructura sin necesidad. No crear README extra ni documentación.
-- Al terminar cada fase: `npm run build` y `npm run lint` deben pasar sin errores. Verificación manual con `npm run dev` según el checklist de la fase. Esa es toda la "prueba" requerida.
+- Al terminar cada fase: `pnpm build` y `pnpm lint` deben pasar sin errores. Verificación manual con `pnpm dev` según el checklist de la fase. Esa es toda la "prueba" requerida.
