@@ -1,9 +1,8 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  /* config options here */
-  cacheComponents: true,
-  partialPrefetching: true,
+  // cacheComponents / partialPrefetching (template defaults) disabled: single client-only page,
+  // and their dev "instant UI" validation throws a bundler error.
   turbopack: {
     rules: {
       "*.css": {

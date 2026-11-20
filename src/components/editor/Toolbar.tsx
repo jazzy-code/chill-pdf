@@ -24,7 +24,8 @@ import {
 import { Separator } from '@/components/ui/separator';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { VIEWER_ID } from '@/components/editor/Viewer';
-import { useEditorStore } from '@/store/editor-store';
+import { useStore } from 'zustand';
+import { redo, undo, useEditorStore } from '@/store/editor-store';
 
 const ZOOM_PRESETS = [0.5, 0.75, 1, 1.25, 1.5, 2];
 
@@ -100,6 +101,8 @@ export default function Toolbar() {
   const zoom = useEditorStore((s) => s.zoom);
   const setZoom = useEditorStore((s) => s.setZoom);
   const reset = useEditorStore((s) => s.reset);
+  const canUndo = useStore(useEditorStore.temporal, (s) => s.pastStates.length > 0);
+  const canRedo = useStore(useEditorStore.temporal, (s) => s.futureStates.length > 0);
 
   const closeDocument = () => {
     if (window.confirm('¿Cerrar este documento? Perderás los cambios')) reset();
@@ -126,8 +129,8 @@ export default function Toolbar() {
 
         <Separator orientation="vertical" className="mx-2 h-6!" />
 
-        <IconButton icon={<Undo2 />} tooltip="Deshacer (Ctrl+Z)" disabled />
-        <IconButton icon={<Redo2 />} tooltip="Rehacer (Ctrl+Y)" disabled />
+        <IconButton icon={<Undo2 />} tooltip="Deshacer (Ctrl+Z)" disabled={!canUndo} onClick={undo} />
+        <IconButton icon={<Redo2 />} tooltip="Rehacer (Ctrl+Y)" disabled={!canRedo} onClick={redo} />
 
         <Separator orientation="vertical" className="mx-2 h-6!" />
 

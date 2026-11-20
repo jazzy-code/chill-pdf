@@ -128,7 +128,7 @@ export const useEditorStore = create<EditorState>()(
       deletePage: (id) => {
         const { pages, annotations, activePageId, selectedId } = get();
         if (pages.length <= 1) {
-          toast.error('No puedes eliminar la única página');
+          toast.error('El PDF necesita al menos una página');
           return false;
         }
         const index = pages.findIndex((p) => p.id === id);
@@ -143,6 +143,7 @@ export const useEditorStore = create<EditorState>()(
             activePageId === id ? nextPages[Math.min(index, nextPages.length - 1)].id : activePageId,
           selectedId: nextAnnotations.some((a) => a.id === selectedId) ? selectedId : null,
         });
+        toast('Página eliminada', { action: { label: 'Deshacer', onClick: undo } });
         return true;
       },
 
@@ -187,3 +188,22 @@ export const useEditorStore = create<EditorState>()(
     }
   )
 );
+
+// After undo/redo: drop references to things that no longer exist.
+function syncAfterTimeTravel() {
+  const s = useEditorStore.getState();
+  const patch: Partial<EditorState> = {};
+  if (s.selectedId && !s.annotations.some((a) => a.id === s.selectedId)) patch.selectedId = null;
+  if (!s.pages.some((p) => p.id === s.activePageId)) patch.activePageId = s.pages[0]?.id ?? null;
+  if (Object.keys(patch).length) useEditorStore.setState(patch);
+}
+
+export function undo() {
+  useEditorStore.temporal.getState().undo();
+  syncAfterTimeTravel();
+}
+
+export function redo() {
+  useEditorStore.temporal.getState().redo();
+  syncAfterTimeTravel();
+}

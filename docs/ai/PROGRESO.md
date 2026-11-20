@@ -4,7 +4,7 @@ Marca `[x]` al terminar cada fase (build + lint OK + checklist verificado) y agr
 
 - [x] F0 · Setup
 - [x] F1 · Landing y visor
-- [ ] F2 · Historial, eliminar, reordenar
+- [x] F2 · Historial, eliminar, reordenar
 - [ ] F3 · Fusionar y exportar
 - [ ] F4 · Texto
 - [ ] F5 · Imágenes
@@ -19,4 +19,7 @@ Marca `[x]` al terminar cada fase (build + lint OK + checklist verificado) y agr
 - **F1**: `PdfCanvas` rellena a su padre (que fija el tamaño = placeholder) y renderiza en un canvas nuevo que sustituye al anterior al terminar (sin parpadeo al hacer zoom). Su IntersectionObserver usa como `root` el contenedor con scroll (si no, `rootMargin` no aplica) y libera el canvas al salir de vista.
 - **F1**: página activa = la que ocupa más alto visible (IO con umbrales 0–1), no solo `threshold 0.5`, para que funcione con páginas más altas que el visor. El zoom mantiene anclada la página superior; Ctrl+rueda acumula `deltaY` (suaviza el pinch del trackpad).
 - **F1**: el store ya incluye todas las acciones de `00-CONTEXTO.md` (`appendFiles`, `deletePage`, `movePage`, anotaciones) en versión básica; F2/F3 solo tienen que conectarlas a la UI y añadir toasts/undo.
+- **F2**: `undo()`/`redo()` exportados desde `editor-store.ts` (envuelven `temporal` y limpian `selectedId`/`activePageId` huérfanos); úsalos siempre en vez de llamar a `temporal` directamente.
+- **F2**: el arrastre se inicia desde la miniatura (`setActivatorNodeRef`); la papelera es hermana, no hija. KeyboardSensor con `start: ['Space']` para que Enter siga navegando. Anuncios de dnd-kit traducidos al español.
+- **F2**: se desactivaron `cacheComponents` y `partialPrefetching` en `next.config.ts`: en `next dev` su validación "instant UI" lanzaba un error interno del bundler ("Could not find the module … PlaceValidationBoundaryBelowThisLevel"). No aportan nada a una única página cliente.
 - **F1**: `shadcn add` escribió `import { cn } from "cn"` en `components/ui`; se cambió a `@/lib/utils` (que reexporta el paquete `cn` de shadcn 4).
