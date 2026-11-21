@@ -5,6 +5,7 @@ import { arrayMove } from '@dnd-kit/sortable';
 import { toast } from 'sonner';
 import { baseName, downloadBytes, isPdfFile, pickFiles, readPdfFile } from '@/lib/files';
 import { clearPdfCache, evictPdfDocs } from '@/lib/pdfjs';
+import type { TextStyle } from '@/lib/text-layout';
 import type { Annotation, PageItem, SourceDoc } from '@/types/editor';
 
 export type Tool = 'select' | 'text';
@@ -13,6 +14,16 @@ export const MIN_ZOOM = 0.25;
 export const MAX_ZOOM = 3;
 export const clampZoom = (z: number) =>
   Math.round(Math.min(MAX_ZOOM, Math.max(MIN_ZOOM, z)) * 100) / 100;
+
+export const DEFAULT_TEXT_STYLE: TextStyle = {
+  fontFamily: 'helvetica',
+  fontSize: 16,
+  bold: false,
+  italic: false,
+  underline: false,
+  color: '#1f2937',
+  align: 'left',
+};
 
 export interface EditorState {
   // --- with history (zundo) ---
@@ -26,6 +37,8 @@ export interface EditorState {
   tool: Tool;
   activePageId: string | null;
   isExporting: boolean;
+  editingId: string | null;   // text annotation in edit mode
+  lastTextStyle: TextStyle;   // style for the next new text
 
   loadFiles: (files: File[]) => Promise<boolean>;
   appendFiles: (files: File[]) => Promise<boolean>;
@@ -38,6 +51,8 @@ export interface EditorState {
   setTool: (tool: Tool) => void;
   select: (id: string | null) => void;
   setActivePage: (id: string | null) => void;
+  setEditing: (id: string | null) => void;
+  setLastTextStyle: (patch: Partial<TextStyle>) => void;
   reset: () => void;
 }
 
@@ -79,6 +94,8 @@ const initialData = {
   tool: 'select' as Tool,
   activePageId: null as string | null,
   isExporting: false,
+  editingId: null as string | null,
+  lastTextStyle: DEFAULT_TEXT_STYLE,
 };
 
 export const useEditorStore = create<EditorState>()(
@@ -102,6 +119,7 @@ export const useEditorStore = create<EditorState>()(
           annotations: [],
           fileName: baseName(results[0].source.name),
           selectedId: null,
+          editingId: null,
           tool: 'select',
           activePageId: pages[0]?.id ?? null,
         });
@@ -175,12 +193,15 @@ export const useEditorStore = create<EditorState>()(
         set({
           annotations: get().annotations.filter((a) => a.id !== id),
           selectedId: get().selectedId === id ? null : get().selectedId,
+          editingId: get().editingId === id ? null : get().editingId,
         }),
 
       setZoom: (zoom) => set({ zoom: clampZoom(zoom) }),
       setTool: (tool) => set({ tool }),
       select: (selectedId) => set({ selectedId }),
       setActivePage: (activePageId) => set({ activePageId }),
+      setEditing: (editingId) => set({ editingId }),
+      setLastTextStyle: (patch) => set({ lastTextStyle: { ...get().lastTextStyle, ...patch } }),
 
       reset: () => {
         clearPdfCache();
@@ -201,6 +222,7 @@ function syncAfterTimeTravel() {
   const s = useEditorStore.getState();
   const patch: Partial<EditorState> = {};
   if (s.selectedId && !s.annotations.some((a) => a.id === s.selectedId)) patch.selectedId = null;
+  if (s.editingId && !s.annotations.some((a) => a.id === s.editingId)) patch.editingId = null;
   if (!s.pages.some((p) => p.id === s.activePageId)) patch.activePageId = s.pages[0]?.id ?? null;
   if (Object.keys(patch).length) useEditorStore.setState(patch);
 }

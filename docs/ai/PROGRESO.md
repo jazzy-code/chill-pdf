@@ -6,7 +6,7 @@ Marca `[x]` al terminar cada fase (build + lint OK + checklist verificado) y agr
 - [x] F1 · Landing y visor
 - [x] F2 · Historial, eliminar, reordenar
 - [x] F3 · Fusionar y exportar
-- [ ] F4 · Texto
+- [x] F4 · Texto
 - [ ] F5 · Imágenes
 - [ ] F6 · Pulido
 
@@ -19,6 +19,11 @@ Marca `[x]` al terminar cada fase (build + lint OK + checklist verificado) y agr
 - **F1**: `PdfCanvas` rellena a su padre (que fija el tamaño = placeholder) y renderiza en un canvas nuevo que sustituye al anterior al terminar (sin parpadeo al hacer zoom). Su IntersectionObserver usa como `root` el contenedor con scroll (si no, `rootMargin` no aplica) y libera el canvas al salir de vista.
 - **F1**: página activa = la que ocupa más alto visible (IO con umbrales 0–1), no solo `threshold 0.5`, para que funcione con páginas más altas que el visor. El zoom mantiene anclada la página superior; Ctrl+rueda acumula `deltaY` (suaviza el pinch del trackpad).
 - **F1**: el store ya incluye todas las acciones de `00-CONTEXTO.md` (`appendFiles`, `deletePage`, `movePage`, anotaciones) en versión básica; F2/F3 solo tienen que conectarlas a la UI y añadir toasts/undo.
+- **F4**: el ajuste de línea NO lo hace el navegador: `lib/text-layout.ts` (`wrapText`) es un único algoritmo que usan la pantalla (medida con canvas `measureText`) y la exportación (`font.widthOfTextAtSize`). El modo vista pinta una `div` por línea calculada. Así pantalla y PDF parten igual y la altura se calcula sin medir el DOM (`layoutText`), por lo que cada cambio de estilo es **una** entrada de historial con la altura ya recalculada. Las fuentes de pantalla (Arial, Times New Roman, Courier New) tienen las mismas métricas que las StandardFonts.
+- **F4**: baseline en la exportación = `y + i·lineHeight + fontSize·BASELINE_EM[fuente]` (`fonts.ts`), calculado con ascent/descent de las fuentes de Windows en vez del `0.8` genérico; subrayado a `0.12em` bajo la baseline. Medido: PDF vs editor ≤ 1,5 pt de diferencia (páginas vertical, horizontal y rotada 90°). En macOS (Helvetica real) puede variar ~1 px.
+- **F4**: la caja de texto no lleva los `+4` de relleno: altura = líneas × fontSize × 1,2, así `y` es exactamente el borde superior de la primera línea.
+- **F4**: estado sin historial en el store: `editingId` (texto en edición) y `lastTextStyle`. El color personalizado (`<input type="color">`) solo guarda en el evento nativo `change` para no llenar el historial mientras se arrastra el selector.
+- **F4**: los controles con menú propio (Select de fuente/tamaño, Popover de color) cierran la edición al abrirse (el texto se guarda en el blur); los botones (B/I/U, alineación, −/+) mantienen el foco con `onMouseDown preventDefault`.
 - **F3**: `pickAndAppendPdfs()` y `downloadDocument()` viven en `editor-store.ts` (los usan toolbar y sidebar). `pickFiles(accept, multiple)` en `lib/files.ts` sirve también para imágenes en F5. `fonts.ts` ya tiene `FONT_OPTIONS`, `cssFontFamily()` y `standardFontFor()` (devuelve el nombre de StandardFonts como string para no cargar pdf-lib en el bundle inicial).
 - **F3**: `exportPdf` lanza `EncryptedSourceError` si un origen está cifrado (con `ignoreEncryption` pdf-lib copiaría páginas ilegibles) → toast claro. Si la misma página de origen aparece dos veces, se copia de nuevo.
 - **F3**: `drawTextAnnotation` / `drawImageAnnotation` existen con firma `(ctx: DrawContext, a)`; `ctx` trae `lib`, `doc`, `page` y cachés de fuentes e imágenes. Se implementan en F4/F5.

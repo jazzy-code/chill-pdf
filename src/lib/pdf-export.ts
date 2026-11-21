@@ -1,5 +1,8 @@
 'use client';
 import type { PDFDocument, PDFFont, PDFImage, PDFPage } from 'pdf-lib';
+import { pageRotation, toPdfPoint } from '@/lib/coords';
+import { BASELINE_EM, standardFontFor, UNDERLINE_OFFSET_EM } from '@/lib/fonts';
+import { LINE_HEIGHT, wrapText } from '@/lib/text-layout';
 import type {
   Annotation,
   ImageAnnotation,
@@ -25,10 +28,69 @@ export class EncryptedSourceError extends Error {
   }
 }
 
-/** Implemented in F4. */
+function hexToRgb(lib: PdfLib, hex: string) {
+  const n = parseInt(hex.replace('#', '').slice(0, 6), 16) || 0;
+  return lib.rgb(((n >> 16) & 255) / 255, ((n >> 8) & 255) / 255, (n & 255) / 255);
+}
+
+/** Standard fonts only support WinAnsi: replace anything not encodable with "?". */
+function sanitize(font: PDFFont, text: string) {
+  return text
+    .replace(/\t/g, ' ')
+    .split('\n')
+    .map((line) =>
+      Array.from(line)
+        .map((ch) => {
+          try {
+            font.encodeText(ch);
+            return ch;
+          } catch {
+            return '?';
+          }
+        })
+        .join('')
+    )
+    .join('\n');
+}
+
 export async function drawTextAnnotation(ctx: DrawContext, a: TextAnnotation): Promise<void> {
-  void ctx;
-  void a;
+  const { lib, doc, page } = ctx;
+  const fontName = standardFontFor(a.fontFamily, a.bold, a.italic);
+  let fontPromise = ctx.fonts.get(fontName);
+  if (!fontPromise) {
+    fontPromise = doc.embedFont(fontName);
+    ctx.fonts.set(fontName, fontPromise);
+  }
+  const font = await fontPromise;
+
+  const size = a.fontSize;
+  const measure = (s: string) => font.widthOfTextAtSize(s, size);
+  const lines = wrapText(sanitize(font, a.text), a.width, measure);
+  const lineHeight = size * LINE_HEIGHT;
+  const color = hexToRgb(lib, a.color);
+  const rotate = lib.degrees(pageRotation(page));
+
+  lines.forEach((line, i) => {
+    if (line.trim() === '') return;
+    const lineWidth = measure(line);
+    const offsetX =
+      a.align === 'center' ? (a.width - lineWidth) / 2 : a.align === 'right' ? a.width - lineWidth : 0;
+    const x = a.x + offsetX;
+    const baseline = a.y + i * lineHeight + size * BASELINE_EM[a.fontFamily];
+
+    const p = toPdfPoint(page, x, baseline);
+    page.drawText(line, { x: p.x, y: p.y, size, font, color, rotate });
+
+    if (a.underline) {
+      const uy = baseline + size * UNDERLINE_OFFSET_EM;
+      page.drawLine({
+        start: toPdfPoint(page, x, uy),
+        end: toPdfPoint(page, x + lineWidth, uy),
+        thickness: size / 15,
+        color,
+      });
+    }
+  });
 }
 
 /** Implemented in F5. */

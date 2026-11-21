@@ -1,5 +1,6 @@
 'use client';
 import { memo } from 'react';
+import AnnotationLayer from '@/components/editor/AnnotationLayer';
 import PdfCanvas from '@/components/editor/PdfCanvas';
 import type { PageItem, SourceDoc } from '@/types/editor';
 
@@ -18,8 +19,7 @@ function PageView({ page, source, zoom }: Props) {
       style={{ width: page.width * zoom, height: page.height * zoom }}
     >
       <PdfCanvas source={source} pageIndex={page.sourceIndex} scale={zoom} className="rounded-sm" />
-      {/* annotation layer (F4/F5) */}
-      <div className="absolute inset-0" />
+      <AnnotationLayer page={page} zoom={zoom} />
     </div>
   );
 }

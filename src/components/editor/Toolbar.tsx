@@ -26,6 +26,7 @@ import { Separator } from '@/components/ui/separator';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { VIEWER_ID } from '@/components/editor/Viewer';
 import { useStore } from 'zustand';
+import { cn } from '@/lib/utils';
 import {
   downloadDocument,
   pickAndAppendPdfs,
@@ -50,17 +51,28 @@ function ToolButton({
   label,
   tooltip,
   disabled,
+  active,
   onClick,
 }: {
   icon: ReactNode;
   label: string;
   tooltip: string;
   disabled?: boolean;
+  active?: boolean;
   onClick?: () => void;
 }) {
   return (
     <WithTooltip label={tooltip}>
-      <Button variant="ghost" className="rounded-xl" disabled={disabled} onClick={onClick}>
+      <Button
+        variant="ghost"
+        className={cn(
+          'rounded-xl',
+          active && 'bg-secondary text-secondary-foreground hover:bg-secondary hover:text-secondary-foreground'
+        )}
+        aria-pressed={active}
+        disabled={disabled}
+        onClick={onClick}
+      >
         {icon}
         <span className="hidden lg:inline">{label}</span>
       </Button>
@@ -109,6 +121,7 @@ export default function Toolbar() {
   const setZoom = useEditorStore((s) => s.setZoom);
   const reset = useEditorStore((s) => s.reset);
   const isExporting = useEditorStore((s) => s.isExporting);
+  const tool = useEditorStore((s) => s.tool);
   const canUndo = useStore(useEditorStore.temporal, (s) => s.pastStates.length > 0);
   const canRedo = useStore(useEditorStore.temporal, (s) => s.futureStates.length > 0);
 
@@ -137,7 +150,17 @@ export default function Toolbar() {
           tooltip="Añadir PDF al final"
           onClick={pickAndAppendPdfs}
         />
-        <ToolButton icon={<Type />} label="Texto" tooltip="Añadir texto" disabled />
+        <ToolButton
+          icon={<Type />}
+          label="Texto"
+          tooltip={tool === 'text' ? 'Haz clic en una página para escribir (Esc cancela)' : 'Añadir texto'}
+          active={tool === 'text'}
+          onClick={() => {
+            const s = useEditorStore.getState();
+            s.select(null);
+            s.setTool(s.tool === 'text' ? 'select' : 'text');
+          }}
+        />
         <ToolButton icon={<ImagePlus />} label="Imagen" tooltip="Añadir imagen" disabled />
 
         <Separator orientation="vertical" className="mx-2 h-6!" />

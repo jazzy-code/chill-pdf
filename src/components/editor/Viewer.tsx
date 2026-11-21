@@ -93,7 +93,17 @@ export default function Viewer() {
   }, [pages, zoom]);
 
   return (
-    <div id={VIEWER_ID} ref={ref} className="min-w-0 flex-1 overflow-auto bg-muted">
+    <div
+      id={VIEWER_ID}
+      ref={ref}
+      className="min-w-0 flex-1 overflow-auto bg-muted"
+      onClick={(e) => {
+        // empty grey area around the pages → deselect
+        if (e.target === e.currentTarget || e.target === e.currentTarget.firstElementChild) {
+          useEditorStore.getState().select(null);
+        }
+      }}
+    >
       <div className="flex w-max min-w-full flex-col items-center gap-6 p-8">
         {pages.map((page) => (
           <PageView key={page.id} page={page} source={sources[page.sourceId]} zoom={zoom} />
