@@ -1,4 +1,5 @@
 'use client';
+import FileDropZone from '@/components/editor/FileDropZone';
 import PagesSidebar from '@/components/editor/PagesSidebar';
 import PropertiesBar from '@/components/editor/PropertiesBar';
 import Toolbar from '@/components/editor/Toolbar';
@@ -11,10 +12,10 @@ export default function Editor() {
     <div className="flex h-dvh flex-col">
       <Toolbar />
       <PropertiesBar />
-      <div className="flex min-h-0 flex-1">
+      <FileDropZone>
         <PagesSidebar />
         <Viewer />
-      </div>
+      </FileDropZone>
     </div>
   );
 }

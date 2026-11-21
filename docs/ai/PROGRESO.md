@@ -5,7 +5,7 @@ Marca `[x]` al terminar cada fase (build + lint OK + checklist verificado) y agr
 - [x] F0 · Setup
 - [x] F1 · Landing y visor
 - [x] F2 · Historial, eliminar, reordenar
-- [ ] F3 · Fusionar y exportar
+- [x] F3 · Fusionar y exportar
 - [ ] F4 · Texto
 - [ ] F5 · Imágenes
 - [ ] F6 · Pulido
@@ -19,6 +19,10 @@ Marca `[x]` al terminar cada fase (build + lint OK + checklist verificado) y agr
 - **F1**: `PdfCanvas` rellena a su padre (que fija el tamaño = placeholder) y renderiza en un canvas nuevo que sustituye al anterior al terminar (sin parpadeo al hacer zoom). Su IntersectionObserver usa como `root` el contenedor con scroll (si no, `rootMargin` no aplica) y libera el canvas al salir de vista.
 - **F1**: página activa = la que ocupa más alto visible (IO con umbrales 0–1), no solo `threshold 0.5`, para que funcione con páginas más altas que el visor. El zoom mantiene anclada la página superior; Ctrl+rueda acumula `deltaY` (suaviza el pinch del trackpad).
 - **F1**: el store ya incluye todas las acciones de `00-CONTEXTO.md` (`appendFiles`, `deletePage`, `movePage`, anotaciones) en versión básica; F2/F3 solo tienen que conectarlas a la UI y añadir toasts/undo.
+- **F3**: `pickAndAppendPdfs()` y `downloadDocument()` viven en `editor-store.ts` (los usan toolbar y sidebar). `pickFiles(accept, multiple)` en `lib/files.ts` sirve también para imágenes en F5. `fonts.ts` ya tiene `FONT_OPTIONS`, `cssFontFamily()` y `standardFontFor()` (devuelve el nombre de StandardFonts como string para no cargar pdf-lib en el bundle inicial).
+- **F3**: `exportPdf` lanza `EncryptedSourceError` si un origen está cifrado (con `ignoreEncryption` pdf-lib copiaría páginas ilegibles) → toast claro. Si la misma página de origen aparece dos veces, se copia de nuevo.
+- **F3**: `drawTextAnnotation` / `drawImageAnnotation` existen con firma `(ctx: DrawContext, a)`; `ctx` trae `lib`, `doc`, `page` y cachés de fuentes e imágenes. Se implementan en F4/F5.
+- **F3 (corrige F2)**: el `KeyboardSensor` de dnd-kit fallaba con la barra lateral desplazada (no movía nada o movía otra página). Se quitó: el teclado reordena con **Alt+↑/↓** sobre la miniatura (foco y anuncio `aria-live` incluidos). El arrastre con ratón/táctil sigue con dnd-kit.
 - **Gestor de paquetes: pnpm** (decisión del usuario tras F2). Se borró `package-lock.json`, `package.json` fija `"packageManager": "pnpm@12.6.0"` y los docs usan `pnpm build` / `pnpm lint` / `pnpm dev` / `pnpm add` / `pnpm dlx`. `pnpm-workspace.yaml` excluye `lucide-react@1.77.0` de `minimumReleaseAge` (versión más reciente que el mínimo de días de pnpm).
 - **F2**: `undo()`/`redo()` exportados desde `editor-store.ts` (envuelven `temporal` y limpian `selectedId`/`activePageId` huérfanos); úsalos siempre en vez de llamar a `temporal` directamente.
 - **F2**: el arrastre se inicia desde la miniatura (`setActivatorNodeRef`); la papelera es hermana, no hija. KeyboardSensor con `start: ['Space']` para que Enter siga navegando. Anuncios de dnd-kit traducidos al español.

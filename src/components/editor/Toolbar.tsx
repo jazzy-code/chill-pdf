@@ -6,6 +6,7 @@ import {
   FilePlus2,
   FileText,
   ImagePlus,
+  Loader2,
   Minus,
   MoveHorizontal,
   Plus,
@@ -25,7 +26,13 @@ import { Separator } from '@/components/ui/separator';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { VIEWER_ID } from '@/components/editor/Viewer';
 import { useStore } from 'zustand';
-import { redo, undo, useEditorStore } from '@/store/editor-store';
+import {
+  downloadDocument,
+  pickAndAppendPdfs,
+  redo,
+  undo,
+  useEditorStore,
+} from '@/store/editor-store';
 
 const ZOOM_PRESETS = [0.5, 0.75, 1, 1.25, 1.5, 2];
 
@@ -101,6 +108,7 @@ export default function Toolbar() {
   const zoom = useEditorStore((s) => s.zoom);
   const setZoom = useEditorStore((s) => s.setZoom);
   const reset = useEditorStore((s) => s.reset);
+  const isExporting = useEditorStore((s) => s.isExporting);
   const canUndo = useStore(useEditorStore.temporal, (s) => s.pastStates.length > 0);
   const canRedo = useStore(useEditorStore.temporal, (s) => s.futureStates.length > 0);
 
@@ -123,7 +131,12 @@ export default function Toolbar() {
       </button>
 
       <div className="flex flex-1 items-center justify-center gap-1">
-        <ToolButton icon={<FilePlus2 />} label="Añadir PDF" tooltip="Añadir PDF" disabled />
+        <ToolButton
+          icon={<FilePlus2 />}
+          label="Añadir PDF"
+          tooltip="Añadir PDF al final"
+          onClick={pickAndAppendPdfs}
+        />
         <ToolButton icon={<Type />} label="Texto" tooltip="Añadir texto" disabled />
         <ToolButton icon={<ImagePlus />} label="Imagen" tooltip="Añadir imagen" disabled />
 
@@ -173,10 +186,11 @@ export default function Toolbar() {
       <Button
         size="lg"
         className="h-11 rounded-full px-6 font-bold shadow-sm transition hover:-translate-y-0.5 hover:shadow-md"
-        disabled
+        disabled={isExporting}
+        onClick={downloadDocument}
       >
-        <Download />
-        <span className="hidden sm:inline">Descargar</span>
+        {isExporting ? <Loader2 className="animate-spin" /> : <Download />}
+        <span className="hidden sm:inline">{isExporting ? 'Preparando…' : 'Descargar'}</span>
       </Button>
     </header>
   );

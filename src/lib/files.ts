@@ -11,6 +11,31 @@ export function baseName(fileName: string) {
   return fileName.replace(/\.pdf$/i, '');
 }
 
+/** Opens the native file picker. Resolves with [] if the user cancels. */
+export function pickFiles(accept: string, multiple = false): Promise<File[]> {
+  return new Promise((resolve) => {
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = accept;
+    input.multiple = multiple;
+    input.addEventListener('change', () => resolve(Array.from(input.files ?? [])), { once: true });
+    input.addEventListener('cancel', () => resolve([]), { once: true });
+    input.click();
+  });
+}
+
+export function downloadBytes(bytes: Uint8Array, name: string) {
+  const blob = new Blob([bytes as BlobPart], { type: 'application/pdf' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = name;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 10_000);
+}
+
 const normalizeRotation = (r: number) =>
   (((Math.round(r / 90) * 90) % 360) + 360) % 360 as PageItem['rotation'];
 

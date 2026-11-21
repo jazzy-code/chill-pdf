@@ -37,9 +37,10 @@ interface Props {
   active: boolean;
   onSelect: (id: string) => void;
   onDelete: (id: string) => void;
+  onMove: (id: string, direction: -1 | 1) => void;
 }
 
-function PageThumbnail({ page, source, index, active, onSelect, onDelete }: Props) {
+function PageThumbnail({ page, source, index, active, onSelect, onDelete, onMove }: Props) {
   const { attributes, listeners, setNodeRef, setActivatorNodeRef, transform, transition, isDragging } =
     useSortable({ id: page.id });
   const scale = THUMB_WIDTH / page.width;
@@ -58,7 +59,12 @@ function PageThumbnail({ page, source, index, active, onSelect, onDelete }: Prop
           {...attributes}
           {...listeners}
           onClick={() => onSelect(page.id)}
-          aria-label={`Página ${index + 1}. Enter para ir, Espacio para mover`}
+          onKeyDown={(e) => {
+            if (!e.altKey || (e.key !== 'ArrowUp' && e.key !== 'ArrowDown')) return;
+            e.preventDefault();
+            onMove(page.id, e.key === 'ArrowUp' ? -1 : 1);
+          }}
+          aria-label={`Página ${index + 1}`}
           aria-current={active ? 'page' : undefined}
           className={cn(
             'relative block cursor-grab touch-none overflow-hidden rounded-md bg-card shadow-sm ring-1 ring-border transition-shadow duration-150 outline-none hover:shadow-md focus-visible:ring-2 focus-visible:ring-ring active:cursor-grabbing',

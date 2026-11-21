@@ -3,7 +3,7 @@ import { create } from 'zustand';
 import { temporal } from 'zundo';
 import { arrayMove } from '@dnd-kit/sortable';
 import { toast } from 'sonner';
-import { baseName, isPdfFile, readPdfFile } from '@/lib/files';
+import { baseName, downloadBytes, isPdfFile, pickFiles, readPdfFile } from '@/lib/files';
 import { clearPdfCache, evictPdfDocs } from '@/lib/pdfjs';
 import type { Annotation, PageItem, SourceDoc } from '@/types/editor';
 
@@ -122,6 +122,13 @@ export const useEditorStore = create<EditorState>()(
         results.forEach((r) => (sources[r.source.id] = r.source));
         const added = results.flatMap((r) => r.pages);
         set({ sources, pages: [...get().pages, ...added] });
+
+        const n = added.length;
+        const from =
+          results.length === 1 ? results[0].source.name : `${results.length} archivos`;
+        toast.success(`Se añadieron ${n} ${n === 1 ? 'página' : 'páginas'} de ${from}`, {
+          action: { label: 'Deshacer', onClick: undo },
+        });
         return true;
       },
 
@@ -206,4 +213,33 @@ export function undo() {
 export function redo() {
   useEditorStore.temporal.getState().redo();
   syncAfterTimeTravel();
+}
+
+export async function pickAndAppendPdfs() {
+  const files = await pickFiles('application/pdf,.pdf', true);
+  if (files.length) await useEditorStore.getState().appendFiles(files);
+}
+
+export async function downloadDocument() {
+  const { pages, annotations, sources, fileName, isExporting } = useEditorStore.getState();
+  if (isExporting || pages.length === 0) return;
+  useEditorStore.setState({ isExporting: true });
+  try {
+    const { exportPdf } = await import('@/lib/pdf-export');
+    const bytes = await exportPdf(pages, annotations, sources);
+    downloadBytes(bytes, `${fileName}-editado.pdf`);
+    toast.success('¡Tu PDF está listo!', { description: `${fileName}-editado.pdf` });
+  } catch (err) {
+    console.error(err);
+    if ((err as Error)?.name === 'EncryptedSourceError') {
+      const name = (err as Error & { fileName: string }).fileName;
+      toast.error(`No podemos exportar «${name}»`, {
+        description: 'El archivo está cifrado o protegido. Quita la protección e inténtalo de nuevo.',
+      });
+    } else {
+      toast.error('No pudimos generar el PDF', { description: 'Inténtalo de nuevo.' });
+    }
+  } finally {
+    useEditorStore.setState({ isExporting: false });
+  }
 }

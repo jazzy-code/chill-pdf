@@ -4,23 +4,16 @@ import {
   closestCenter,
   DndContext,
   DragOverlay,
-  KeyboardSensor,
   PointerSensor,
   useSensor,
   useSensors,
   type DragEndEvent,
   type DragStartEvent,
 } from '@dnd-kit/core';
-import {
-  SortableContext,
-  sortableKeyboardCoordinates,
-  verticalListSortingStrategy,
-} from '@dnd-kit/sortable';
+import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import PageThumbnail, { ThumbnailPreview } from '@/components/editor/PageThumbnail';
-import { useEditorStore } from '@/store/editor-store';
-
-// Enter is left free so it keeps navigating to the page; Space picks up / drops.
-const KEYBOARD_CODES = { start: ['Space'], cancel: ['Escape'], end: ['Space', 'Enter'] };
+import { Plus } from 'lucide-react';
+import { pickAndAppendPdfs, useEditorStore } from '@/store/editor-store';
 
 export default function PagesSidebar() {
   const ref = useRef<HTMLElement>(null);
@@ -32,12 +25,28 @@ export default function PagesSidebar() {
   const movePage = useEditorStore((s) => s.movePage);
   const [draggingId, setDraggingId] = useState<string | null>(null);
 
-  const sensors = useSensors(
-    useSensor(PointerSensor, { activationConstraint: { distance: 6 } }),
-    useSensor(KeyboardSensor, {
-      coordinateGetter: sortableKeyboardCoordinates,
-      keyboardCodes: KEYBOARD_CODES,
-    })
+  const [announcement, setAnnouncement] = useState('');
+
+  // Mouse/touch drag only. Keyboard reorder is Alt+↑/↓ (see onMove): dnd-kit's KeyboardSensor
+  // mis-measures once the sidebar is scrolled and can move the wrong page.
+  const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 6 } }));
+
+  const onMove = useCallback(
+    (id: string, direction: -1 | 1) => {
+      const { pages } = useEditorStore.getState();
+      const index = pages.findIndex((p) => p.id === id);
+      const target = pages[index + direction];
+      if (!target) return;
+      movePage(id, target.id);
+      setAnnouncement(`Página movida a la posición ${index + direction + 1} de ${pages.length}.`);
+      // re-ordering keyed DOM nodes can drop focus → restore it
+      requestAnimationFrame(() =>
+        ref.current
+          ?.querySelector<HTMLElement>(`[data-thumb-id="${id}"] button`)
+          ?.focus({ preventScroll: false })
+      );
+    },
+    [movePage]
   );
 
   const goTo = useCallback(
@@ -96,8 +105,7 @@ export default function PagesSidebar() {
             onDragCancel: ({ active }) => `Movimiento cancelado. Página ${pageNumber(active.id)} en su sitio.`,
           },
           screenReaderInstructions: {
-            draggable:
-              'Pulsa Espacio para levantar la página, usa las flechas para moverla y Espacio de nuevo para soltarla. Escape cancela.',
+            draggable: 'Enter va a la página. Alt + flecha arriba o abajo la mueve una posición.',
           },
         }}
       >
@@ -112,6 +120,7 @@ export default function PagesSidebar() {
                 active={page.id === activePageId}
                 onSelect={goTo}
                 onDelete={deletePage}
+                onMove={onMove}
               />
             ))}
           </div>
@@ -126,6 +135,17 @@ export default function PagesSidebar() {
           ) : null}
         </DragOverlay>
       </DndContext>
+      <button
+        type="button"
+        onClick={pickAndAppendPdfs}
+        className="mx-auto mt-6 flex w-40 flex-col items-center justify-center gap-1.5 rounded-xl border-2 border-dashed border-primary/40 py-6 text-sm font-semibold text-muted-foreground transition-colors duration-150 outline-none hover:border-primary hover:bg-accent/40 hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring"
+      >
+        <Plus className="size-5 text-primary" />
+        Añadir PDF
+      </button>
+      <p aria-live="polite" className="sr-only">
+        {announcement}
+      </p>
     </aside>
   );
 }
