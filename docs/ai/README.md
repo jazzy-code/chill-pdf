@@ -16,7 +16,7 @@ Eres el desarrollador que implementa Chill PDF. El diseño técnico ya está dec
 | F2 | `fases/F2-historial-eliminar-reordenar.md` | Undo/redo, eliminar, drag & drop |
 | F3 | `fases/F3-fusionar-y-exportar.md` | Fusionar PDFs, descargar |
 | F4 | `fases/F4-texto.md` | Texto con estilos |
-| F5 | `fases/F5-imagenes.md` | Imágenes: mover, redimensionar, recortar |
+| F5 | `fases/F5-imágenes.md` | Imágenes: mover, redimensionar, recortar |
 | F6 | `fases/F6-pulido.md` | Persistencia, atajos, rendimiento |
 
 ## Reglas de ejecución

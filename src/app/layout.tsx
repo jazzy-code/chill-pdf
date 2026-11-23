@@ -17,7 +17,7 @@ const fredoka = Fredoka({
 });
 
 const DESCRIPTION =
-  "Edita tus PDF sin estrés. Elimina páginas, reordena, fusiona, inserta texto, imagenes y más.";
+  "Edita tus PDF sin estrés. Elimina, reordena y fusiona páginas, inserta texto, imágenes y más.";
 
 export const metadata: Metadata = {
   title: "Chill PDF — Editor de PDF",

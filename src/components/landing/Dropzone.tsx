@@ -65,7 +65,7 @@ export default function Dropzone() {
           <h1 className="font-display text-5xl font-bold tracking-tight md:text-6xl">Chill PDF</h1>
         </div>
         <p className="mx-auto mt-4 max-w-md text-lg text-muted-foreground">
-          Edita tus PDF sin estrés. Elimina páginas, reordena, fusiona PDF&apos;s, inserta texto o imagenes y más..
+          Edita tus PDF sin estrés. <br /> Elimina, reordena y fusiona páginas, inserta texto, imágenes y más.
         </p>
 
         <ResumeCard />

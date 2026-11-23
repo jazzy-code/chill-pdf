@@ -47,7 +47,7 @@ Mantener el resto de variables que genere shadcn; solo sobrescribir estas.
 
 ## Landing (Dropzone)
 - Centrado vertical, logo "Chill PDF" grande en Fredoka con un pequeño emoji/ícono relajado (ej. 😎 o icono `FileText` en un blob amarillo).
-- Subtítulo: "Edita tus PDF sin estrés.  Elimina páginas, reordena, fusiona, inserta texto, imagenes y más.
+- Subtítulo: "Edita tus PDF sin estrés. Elimina, reordena y fusiona páginas, inserta texto, imágenes y más."
 - Zona de drop: tarjeta grande `border-2 border-dashed border-primary/40 rounded-3xl bg-card`, al hacer drag-over cambia a `bg-accent/40 border-primary scale-[1.01]`.
 - Botón grande "Selecciona tu archivo" + texto "o suéltalo aquí". Acepta múltiples PDFs (se fusionan en el orden elegido).
 - 3 mini "chips" con las funciones: Eliminar páginas · Reordenar · Texto e imágenes.
