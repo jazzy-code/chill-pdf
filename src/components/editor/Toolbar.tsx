@@ -30,6 +30,7 @@ import { cn } from '@/lib/utils';
 import {
   downloadDocument,
   pickAndAppendPdfs,
+  pickAndInsertImage,
   redo,
   undo,
   useEditorStore,
@@ -161,7 +162,12 @@ export default function Toolbar() {
             s.setTool(s.tool === 'text' ? 'select' : 'text');
           }}
         />
-        <ToolButton icon={<ImagePlus />} label="Imagen" tooltip="Añadir imagen" disabled />
+        <ToolButton
+          icon={<ImagePlus />}
+          label="Imagen"
+          tooltip="Añadir imagen (o suéltala sobre una página)"
+          onClick={pickAndInsertImage}
+        />
 
         <Separator orientation="vertical" className="mx-2 h-6!" />
 

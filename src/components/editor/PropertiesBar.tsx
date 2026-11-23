@@ -5,7 +5,11 @@ import {
   AlignLeft,
   AlignRight,
   Bold,
+  BringToFront,
+  Crop,
+  ImageUp,
   Italic,
+  SendToBack,
   Minus,
   Plus,
   Trash2,
@@ -19,8 +23,9 @@ import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { FONT_OPTIONS } from '@/lib/fonts';
 import { layoutText, type TextStyle } from '@/lib/text-layout';
-import { useEditorStore } from '@/store/editor-store';
-import type { FontFamily, TextAlign, TextAnnotation } from '@/types/editor';
+import { useShallow } from 'zustand/react/shallow';
+import { pickAndReplaceImage, useEditorStore } from '@/store/editor-store';
+import type { Annotation, FontFamily, ImageAnnotation, TextAlign, TextAnnotation } from '@/types/editor';
 
 const FONT_SIZES = [8, 10, 12, 14, 16, 18, 20, 24, 28, 32, 40, 48, 64, 72];
 const MIN_SIZE = 6;
@@ -52,13 +57,75 @@ function Tip({ label, children }: { label: ReactNode; children: ReactElement }) 
   );
 }
 
+const BAR_CLASS =
+  'flex h-12 shrink-0 items-center justify-center gap-2 overflow-x-auto border-b bg-card px-4 animate-in fade-in slide-in-from-top-1 duration-200';
+
 export default function PropertiesBar() {
-  const selected = useEditorStore((s) =>
-    s.annotations.find((a) => a.id === s.selectedId && a.type === 'text')
-  ) as TextAnnotation | undefined;
+  const selected = useEditorStore((s) => s.annotations.find((a) => a.id === s.selectedId)) as
+    | Annotation
+    | undefined;
 
   if (!selected) return null;
-  return <TextProperties a={selected} />;
+  return selected.type === 'text' ? <TextProperties a={selected} /> : <ImageProperties a={selected} />;
+}
+
+function ImageProperties({ a }: { a: ImageAnnotation }) {
+  const { setCropping, reorderAnnotation, removeAnnotation } = useEditorStore.getState();
+  // position in the stacking order of its page
+  const { isFront, isBack } = useEditorStore(
+    useShallow((s) => {
+      const onPage = s.annotations.filter((x) => x.pageId === a.pageId);
+      return { isFront: onPage.at(-1)?.id === a.id, isBack: onPage[0]?.id === a.id };
+    })
+  );
+
+  return (
+    <div role="toolbar" aria-label="Propiedades de la imagen" className={BAR_CLASS}>
+      <Button variant="ghost" size="sm" className="rounded-xl" onClick={() => setCropping(a.id)}>
+        <Crop />
+        Recortar
+      </Button>
+      <Button variant="ghost" size="sm" className="rounded-xl" onClick={() => pickAndReplaceImage(a.id)}>
+        <ImageUp />
+        Reemplazar
+      </Button>
+      <Separator orientation="vertical" className="h-6!" />
+      <Tip label="Traer al frente">
+        <Button
+          variant="ghost"
+          size="icon-sm"
+          aria-label="Traer al frente"
+          disabled={isFront}
+          onClick={() => reorderAnnotation(a.id, 'front')}
+        >
+          <BringToFront />
+        </Button>
+      </Tip>
+      <Tip label="Enviar atrás">
+        <Button
+          variant="ghost"
+          size="icon-sm"
+          aria-label="Enviar atrás"
+          disabled={isBack}
+          onClick={() => reorderAnnotation(a.id, 'back')}
+        >
+          <SendToBack />
+        </Button>
+      </Tip>
+      <Separator orientation="vertical" className="h-6!" />
+      <Tip label="Eliminar imagen (Supr)">
+        <Button
+          variant="ghost"
+          size="icon-sm"
+          aria-label="Eliminar imagen"
+          className="text-destructive hover:bg-destructive/10 hover:text-destructive"
+          onClick={() => removeAnnotation(a.id)}
+        >
+          <Trash2 />
+        </Button>
+      </Tip>
+    </div>
+  );
 }
 
 function TextProperties({ a }: { a: TextAnnotation }) {
@@ -93,7 +160,7 @@ function TextProperties({ a }: { a: TextAnnotation }) {
     <div
       role="toolbar"
       aria-label="Propiedades del texto"
-      className="flex h-12 shrink-0 items-center justify-center gap-2 overflow-x-auto border-b bg-card px-4 animate-in fade-in slide-in-from-top-1 duration-200"
+      className={BAR_CLASS}
     >
       <Select
         value={a.fontFamily}

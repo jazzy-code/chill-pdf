@@ -1,6 +1,7 @@
 'use client';
 import { nanoid } from 'nanoid';
 import { useShallow } from 'zustand/react/shallow';
+import ImageAnnotation from '@/components/editor/ImageAnnotation';
 import TextAnnotation from '@/components/editor/TextAnnotation';
 import { layoutText } from '@/lib/text-layout';
 import { cn } from '@/lib/utils';
@@ -39,7 +40,11 @@ export default function AnnotationLayer({ page, zoom }: { page: PageItem; zoom: 
       onClick={onClick}
     >
       {annotations.map((a) =>
-        a.type === 'text' ? <TextAnnotation key={a.id} a={a} zoom={zoom} /> : null
+        a.type === 'text' ? (
+          <TextAnnotation key={a.id} a={a} zoom={zoom} />
+        ) : (
+          <ImageAnnotation key={a.id} a={a} zoom={zoom} />
+        )
       )}
     </div>
   );

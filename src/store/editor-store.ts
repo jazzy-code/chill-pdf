@@ -3,7 +3,18 @@ import { create } from 'zustand';
 import { temporal } from 'zundo';
 import { arrayMove } from '@dnd-kit/sortable';
 import { toast } from 'sonner';
-import { baseName, downloadBytes, isPdfFile, pickFiles, readPdfFile } from '@/lib/files';
+import { nanoid } from 'nanoid';
+import {
+  baseName,
+  downloadBytes,
+  IMAGE_ACCEPT,
+  isImageFile,
+  isPdfFile,
+  normalizeImage,
+  pickFiles,
+  readPdfFile,
+  type NormalizedImage,
+} from '@/lib/files';
 import { clearPdfCache, evictPdfDocs } from '@/lib/pdfjs';
 import type { TextStyle } from '@/lib/text-layout';
 import type { Annotation, PageItem, SourceDoc } from '@/types/editor';
@@ -38,6 +49,7 @@ export interface EditorState {
   activePageId: string | null;
   isExporting: boolean;
   editingId: string | null;   // text annotation in edit mode
+  croppingId: string | null;  // image annotation open in the crop dialog
   lastTextStyle: TextStyle;   // style for the next new text
 
   loadFiles: (files: File[]) => Promise<boolean>;
@@ -52,6 +64,8 @@ export interface EditorState {
   select: (id: string | null) => void;
   setActivePage: (id: string | null) => void;
   setEditing: (id: string | null) => void;
+  setCropping: (id: string | null) => void;
+  reorderAnnotation: (id: string, to: 'front' | 'back') => void;
   setLastTextStyle: (patch: Partial<TextStyle>) => void;
   reset: () => void;
 }
@@ -95,6 +109,7 @@ const initialData = {
   activePageId: null as string | null,
   isExporting: false,
   editingId: null as string | null,
+  croppingId: null as string | null,
   lastTextStyle: DEFAULT_TEXT_STYLE,
 };
 
@@ -120,6 +135,7 @@ export const useEditorStore = create<EditorState>()(
           fileName: baseName(results[0].source.name),
           selectedId: null,
           editingId: null,
+          croppingId: null,
           tool: 'select',
           activePageId: pages[0]?.id ?? null,
         });
@@ -194,6 +210,7 @@ export const useEditorStore = create<EditorState>()(
           annotations: get().annotations.filter((a) => a.id !== id),
           selectedId: get().selectedId === id ? null : get().selectedId,
           editingId: get().editingId === id ? null : get().editingId,
+          croppingId: get().croppingId === id ? null : get().croppingId,
         }),
 
       setZoom: (zoom) => set({ zoom: clampZoom(zoom) }),
@@ -201,6 +218,18 @@ export const useEditorStore = create<EditorState>()(
       select: (selectedId) => set({ selectedId }),
       setActivePage: (activePageId) => set({ activePageId }),
       setEditing: (editingId) => set({ editingId }),
+      setCropping: (croppingId) => set({ croppingId }),
+
+      // Array order = z-order on screen and drawing order in the export
+      reorderAnnotation: (id, to) => {
+        const list = get().annotations;
+        const a = list.find((x) => x.id === id);
+        if (!a) return;
+        const rest = list.filter((x) => x.id !== id);
+        const next = to === 'front' ? [...rest, a] : [a, ...rest];
+        if (next.every((x, i) => x === list[i])) return; // already there → no history entry
+        set({ annotations: next });
+      },
       setLastTextStyle: (patch) => set({ lastTextStyle: { ...get().lastTextStyle, ...patch } }),
 
       reset: () => {
@@ -223,6 +252,7 @@ function syncAfterTimeTravel() {
   const patch: Partial<EditorState> = {};
   if (s.selectedId && !s.annotations.some((a) => a.id === s.selectedId)) patch.selectedId = null;
   if (s.editingId && !s.annotations.some((a) => a.id === s.editingId)) patch.editingId = null;
+  if (s.croppingId && !s.annotations.some((a) => a.id === s.croppingId)) patch.croppingId = null;
   if (!s.pages.some((p) => p.id === s.activePageId)) patch.activePageId = s.pages[0]?.id ?? null;
   if (Object.keys(patch).length) useEditorStore.setState(patch);
 }
@@ -263,5 +293,77 @@ export async function downloadDocument() {
     }
   } finally {
     useEditorStore.setState({ isExporting: false });
+  }
+}
+
+/**
+ * Inserts an image on a page. Without a point it is centered on the page;
+ * with a point (PDF points, page coordinates) it is centered there. Fits 50 % of the page width.
+ */
+export async function insertImage(file: File, pageId?: string, point?: { x: number; y: number }) {
+  const state = useEditorStore.getState();
+  const page = state.pages.find((p) => p.id === (pageId ?? state.activePageId)) ?? state.pages[0];
+  if (!page) return;
+  if (!isImageFile(file)) {
+    toast.error('Ese archivo no es una imagen', { description: 'Usa PNG, JPEG, WEBP o GIF.' });
+    return;
+  }
+  let img: NormalizedImage;
+  try {
+    img = await normalizeImage(file);
+  } catch {
+    toast.error(`No pudimos abrir ${file.name}`);
+    return;
+  }
+  const ratio = img.naturalHeight / img.naturalWidth;
+  let width = page.width * 0.5;
+  let height = width * ratio;
+  if (height > page.height * 0.8) {
+    height = page.height * 0.8;
+    width = height / ratio;
+  }
+  const cx = point?.x ?? page.width / 2;
+  const cy = point?.y ?? page.height / 2;
+  const x = Math.max(0, Math.min(cx - width / 2, page.width - width));
+  const y = Math.max(0, Math.min(cy - height / 2, page.height - height));
+  const id = nanoid();
+  state.addAnnotation({
+    id,
+    type: 'image',
+    pageId: page.id,
+    x,
+    y,
+    width,
+    height,
+    src: img.src,
+    originalSrc: img.src,
+    mime: img.mime,
+  });
+  state.setTool('select');
+}
+
+export async function pickAndInsertImage() {
+  const [file] = await pickFiles(IMAGE_ACCEPT);
+  if (file) await insertImage(file);
+}
+
+/** Replaces an image keeping its position and width (height follows the new proportions). */
+export async function pickAndReplaceImage(id: string) {
+  const [file] = await pickFiles(IMAGE_ACCEPT);
+  if (!file) return;
+  const { annotations, updateAnnotation } = useEditorStore.getState();
+  const a = annotations.find((x) => x.id === id);
+  if (!a || a.type !== 'image') return;
+  try {
+    const img = await normalizeImage(file);
+    updateAnnotation(id, {
+      src: img.src,
+      originalSrc: img.src,
+      mime: img.mime,
+      crop: undefined,
+      height: a.width * (img.naturalHeight / img.naturalWidth),
+    });
+  } catch {
+    toast.error(`No pudimos abrir ${file.name}`);
   }
 }

@@ -7,7 +7,7 @@ Marca `[x]` al terminar cada fase (build + lint OK + checklist verificado) y agr
 - [x] F2 · Historial, eliminar, reordenar
 - [x] F3 · Fusionar y exportar
 - [x] F4 · Texto
-- [ ] F5 · Imágenes
+- [x] F5 · Imágenes
 - [ ] F6 · Pulido
 
 ## Notas / desviaciones
@@ -19,6 +19,12 @@ Marca `[x]` al terminar cada fase (build + lint OK + checklist verificado) y agr
 - **F1**: `PdfCanvas` rellena a su padre (que fija el tamaño = placeholder) y renderiza en un canvas nuevo que sustituye al anterior al terminar (sin parpadeo al hacer zoom). Su IntersectionObserver usa como `root` el contenedor con scroll (si no, `rootMargin` no aplica) y libera el canvas al salir de vista.
 - **F1**: página activa = la que ocupa más alto visible (IO con umbrales 0–1), no solo `threshold 0.5`, para que funcione con páginas más altas que el visor. El zoom mantiene anclada la página superior; Ctrl+rueda acumula `deltaY` (suaviza el pinch del trackpad).
 - **F1**: el store ya incluye todas las acciones de `00-CONTEXTO.md` (`appendFiles`, `deletePage`, `movePage`, anotaciones) en versión básica; F2/F3 solo tienen que conectarlas a la UI y añadir toasts/undo.
+- **F5**: soltar imágenes lo gestiona `FileDropZone` (no `PageView`): la imagen va a la página y al punto bajo el cursor; los PDF se siguen añadiendo al final. Durante el arrastre solo se leen los tipos MIME, así que el aviso cambia a «Suelta la imagen sobre una página» y no tapa las páginas.
+- **F5**: `normalizeImage` pasa SIEMPRE por canvas (también los JPEG) para fijar la orientación EXIF en los píxeles; pdf-lib ignora EXIF y la foto saldría girada.
+- **F5**: el orden del array `annotations` es el apilado en pantalla y en la exportación. El texto ya no sube de z-index al seleccionarlo, solo mientras se edita. `reorderAnnotation(id, 'front' | 'back')` no crea entrada de historial si no cambia nada.
+- **F5**: con la proporción bloqueada, react-rnd (re-resizable) hace que las esquinas sigan el movimiento vertical y los laterales el horizontal. Es comportamiento de la librería; con Shift la proporción queda libre.
+- **F5**: `croppingId` en el store (sin historial) abre `CropDialog`; mientras está abierto, los atajos globales (Ctrl+Z, Supr) no actúan.
+- **F5 (sin probar)**: «Reemplazar» y el botón **Imagen** usan el selector de archivos nativo, que no se puede automatizar; la lógica compartida (`normalizeImage`, `insertImage`) sí se probó soltando archivos.
 - **F4**: el ajuste de línea NO lo hace el navegador: `lib/text-layout.ts` (`wrapText`) es un único algoritmo que usan la pantalla (medida con canvas `measureText`) y la exportación (`font.widthOfTextAtSize`). El modo vista pinta una `div` por línea calculada. Así pantalla y PDF parten igual y la altura se calcula sin medir el DOM (`layoutText`), por lo que cada cambio de estilo es **una** entrada de historial con la altura ya recalculada. Las fuentes de pantalla (Arial, Times New Roman, Courier New) tienen las mismas métricas que las StandardFonts.
 - **F4**: baseline en la exportación = `y + i·lineHeight + fontSize·BASELINE_EM[fuente]` (`fonts.ts`), calculado con ascent/descent de las fuentes de Windows en vez del `0.8` genérico; subrayado a `0.12em` bajo la baseline. Medido: PDF vs editor ≤ 1,5 pt de diferencia (páginas vertical, horizontal y rotada 90°). En macOS (Helvetica real) puede variar ~1 px.
 - **F4**: la caja de texto no lleva los `+4` de relleno: altura = líneas × fontSize × 1,2, así `y` es exactamente el borde superior de la primera línea.

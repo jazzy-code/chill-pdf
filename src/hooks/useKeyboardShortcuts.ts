@@ -17,6 +17,7 @@ export function useKeyboardShortcuts() {
   useEffect(() => {
     const onKeyDown = (e: KeyboardEvent) => {
       if (isEditableTarget(document.activeElement)) return;
+      if (useEditorStore.getState().croppingId) return; // crop dialog open: it owns the keyboard
       const mod = e.ctrlKey || e.metaKey;
       const key = e.key.toLowerCase();
 

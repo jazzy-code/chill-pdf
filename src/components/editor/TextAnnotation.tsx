@@ -77,7 +77,8 @@ function TextAnnotation({ a, zoom }: Props) {
       disableDragging={editing}
       enableResizing={selected && !editing ? { left: true, right: true } : false}
       resizeHandleComponent={{ left: handle, right: handle }}
-      style={{ zIndex: selected ? 20 : 10 }}
+      // stacking follows the annotations array (= export order); only raise while typing
+      style={editing ? { zIndex: 30 } : undefined}
       className={cn(
         'outline-2 outline-offset-2 outline-transparent',
         selected ? 'outline-dashed outline-primary' : 'hover:outline-dashed hover:outline-primary/40',

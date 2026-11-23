@@ -1,4 +1,5 @@
 'use client';
+import CropDialog from '@/components/editor/CropDialog';
 import FileDropZone from '@/components/editor/FileDropZone';
 import PagesSidebar from '@/components/editor/PagesSidebar';
 import PropertiesBar from '@/components/editor/PropertiesBar';
@@ -16,6 +17,7 @@ export default function Editor() {
         <PagesSidebar />
         <Viewer />
       </FileDropZone>
+      <CropDialog />
     </div>
   );
 }

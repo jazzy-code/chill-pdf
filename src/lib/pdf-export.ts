@@ -93,10 +93,25 @@ export async function drawTextAnnotation(ctx: DrawContext, a: TextAnnotation): P
   });
 }
 
-/** Implemented in F5. */
 export async function drawImageAnnotation(ctx: DrawContext, a: ImageAnnotation): Promise<void> {
-  void ctx;
-  void a;
+  const { lib, doc, page } = ctx;
+  let imagePromise = ctx.images.get(a.src);
+  if (!imagePromise) {
+    // pdf-lib accepts data URIs directly
+    imagePromise = a.mime === 'image/jpeg' ? doc.embedJpg(a.src) : doc.embedPng(a.src);
+    ctx.images.set(a.src, imagePromise);
+  }
+  const image = await imagePromise;
+
+  // anchor = bottom-left corner as seen on screen; rotation follows the page's own rotation
+  const p = toPdfPoint(page, a.x, a.y + a.height);
+  page.drawImage(image, {
+    x: p.x,
+    y: p.y,
+    width: a.width,
+    height: a.height,
+    rotate: lib.degrees(pageRotation(page)),
+  });
 }
 
 export async function exportPdf(

@@ -85,6 +85,13 @@
   --sidebar-ring: oklch(0.708 0 0);
 }
 
+/* react-image-crop uses its own CSS variables: map them to the theme */
+:root {
+  --rc-focus-color: var(--primary);
+  --rc-drag-handle-bg-colour: var(--card);
+  --rc-border-color: var(--primary);
+}
+
 @layer base {
   * {
     @apply border-border outline-ring/50;

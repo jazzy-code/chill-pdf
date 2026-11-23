@@ -11,6 +11,54 @@ export function baseName(fileName: string) {
   return fileName.replace(/\.pdf$/i, '');
 }
 
+export const IMAGE_ACCEPT = 'image/png,image/jpeg,image/webp,image/gif';
+const MAX_IMAGE_SIDE = 2000;
+
+export const isImageFile = (file: File) => file.type.startsWith('image/');
+
+export interface NormalizedImage {
+  src: string;
+  mime: 'image/png' | 'image/jpeg';
+  naturalWidth: number;
+  naturalHeight: number;
+}
+
+export function loadImage(src: string): Promise<HTMLImageElement> {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.onload = () => resolve(img);
+    img.onerror = () => reject(new Error('image load failed'));
+    img.src = src;
+  });
+}
+
+/**
+ * Re-encodes any image as PNG or JPEG (the only formats pdf-lib embeds), downscaling if huge.
+ * Always goes through a canvas so EXIF orientation is baked into the pixels.
+ */
+export async function normalizeImage(file: File): Promise<NormalizedImage> {
+  const url = URL.createObjectURL(file);
+  try {
+    const img = await loadImage(url);
+    const scale = Math.min(1, MAX_IMAGE_SIDE / Math.max(img.naturalWidth, img.naturalHeight));
+    const w = Math.max(1, Math.round(img.naturalWidth * scale));
+    const h = Math.max(1, Math.round(img.naturalHeight * scale));
+    const canvas = document.createElement('canvas');
+    canvas.width = w;
+    canvas.height = h;
+    canvas.getContext('2d')!.drawImage(img, 0, 0, w, h);
+    const mime = file.type === 'image/jpeg' ? 'image/jpeg' : 'image/png';
+    return {
+      src: canvas.toDataURL(mime, 0.92),
+      mime,
+      naturalWidth: w,
+      naturalHeight: h,
+    };
+  } finally {
+    URL.revokeObjectURL(url);
+  }
+}
+
 /** Opens the native file picker. Resolves with [] if the user cancels. */
 export function pickFiles(accept: string, multiple = false): Promise<File[]> {
   return new Promise((resolve) => {

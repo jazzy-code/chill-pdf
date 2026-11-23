@@ -43,6 +43,7 @@ export interface ImageAnnotation extends BaseAnnotation {
   src: string;           // dataURL actual (ya recortada si aplica). Solo PNG o JPEG.
   originalSrc: string;   // dataURL original sin recortar (para volver a recortar)
   mime: 'image/png' | 'image/jpeg';
+  crop?: { x: number; y: number; width: number; height: number }; // último recorte, en % de originalSrc
 }
 
 export type Annotation = TextAnnotation | ImageAnnotation;
