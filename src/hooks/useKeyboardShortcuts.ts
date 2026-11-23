@@ -1,6 +1,6 @@
 'use client';
 import { useEffect } from 'react';
-import { redo, undo, useEditorStore } from '@/store/editor-store';
+import { downloadDocument, redo, undo, useEditorStore } from '@/store/editor-store';
 
 function isEditableTarget(el: Element | null) {
   if (!el) return false;
@@ -16,6 +16,15 @@ function isEditableTarget(el: Element | null) {
 export function useKeyboardShortcuts() {
   useEffect(() => {
     const onKeyDown = (e: KeyboardEvent) => {
+      // Ctrl/⌘+S → download (also while typing, instead of the browser's "Save page as")
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 's') {
+        e.preventDefault();
+        if (useEditorStore.getState().croppingId) return;
+        const active = document.activeElement;
+        if (active instanceof HTMLTextAreaElement) active.blur(); // commit the text being edited
+        setTimeout(downloadDocument, 0);
+        return;
+      }
       if (isEditableTarget(document.activeElement)) return;
       if (useEditorStore.getState().croppingId) return; // crop dialog open: it owns the keyboard
       const mod = e.ctrlKey || e.metaKey;

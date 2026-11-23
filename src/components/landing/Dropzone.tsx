@@ -1,6 +1,7 @@
 'use client';
 import { useRef, useState, type DragEvent } from 'react';
 import { ArrowUpDown, FileText, Loader2, Trash2, Type, Upload } from 'lucide-react';
+import ResumeCard from '@/components/landing/ResumeCard';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { useEditorStore } from '@/store/editor-store';
@@ -57,6 +58,8 @@ export default function Dropzone() {
         <p className="mx-auto mt-4 max-w-md text-lg text-muted-foreground">
           Edita tus PDF sin estrés. Todo pasa en tu navegador, nada se sube a ningún servidor.
         </p>
+
+        <ResumeCard />
 
         <div
           onDragOver={onDragOver}

@@ -1,5 +1,6 @@
 'use client';
 import { useEffect, useRef, useState } from 'react';
+import { Loader2 } from 'lucide-react';
 import type { RenderTask } from 'pdfjs-dist';
 import { getPdfDoc } from '@/lib/pdfjs';
 import { cn } from '@/lib/utils';
@@ -85,5 +86,13 @@ export default function PdfCanvas({ source, pageIndex, scale, className }: Props
     };
   }, [visible, renderScale, source, pageIndex]);
 
-  return <div ref={ref} className={cn('absolute inset-0 overflow-hidden bg-card', className)} />;
+  // The spinner sits under the canvas host: visible while empty, covered by the opaque page once drawn.
+  return (
+    <div className={cn('absolute inset-0 overflow-hidden bg-card', className)}>
+      <div className="absolute inset-0 flex items-center justify-center" aria-hidden>
+        <Loader2 className="size-5 animate-spin text-primary/50" />
+      </div>
+      <div ref={ref} className="absolute inset-0" />
+    </div>
+  );
 }

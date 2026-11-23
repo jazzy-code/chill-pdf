@@ -16,6 +16,7 @@ import {
   type NormalizedImage,
 } from '@/lib/files';
 import { clearPdfCache, evictPdfDocs } from '@/lib/pdfjs';
+import { clearSession, type SavedSession } from '@/lib/session';
 import type { TextStyle } from '@/lib/text-layout';
 import type { Annotation, PageItem, SourceDoc } from '@/types/editor';
 
@@ -67,6 +68,7 @@ export interface EditorState {
   setCropping: (id: string | null) => void;
   reorderAnnotation: (id: string, to: 'front' | 'back') => void;
   setLastTextStyle: (patch: Partial<TextStyle>) => void;
+  restoreSession: (session: SavedSession) => void;
   reset: () => void;
 }
 
@@ -232,10 +234,26 @@ export const useEditorStore = create<EditorState>()(
       },
       setLastTextStyle: (patch) => set({ lastTextStyle: { ...get().lastTextStyle, ...patch } }),
 
+      restoreSession: (session) => {
+        evictPdfDocs(Object.keys(get().sources));
+        set({
+          ...initialData,
+          lastTextStyle: get().lastTextStyle,
+          sources: session.sources,
+          pages: session.pages,
+          annotations: session.annotations,
+          fileName: session.fileName,
+          activePageId: session.pages[0]?.id ?? null,
+        });
+        useEditorStore.temporal.getState().clear();
+        toast.success('Sesión recuperada', { description: `«${session.fileName}.pdf» tal como lo dejaste.` });
+      },
+
       reset: () => {
         clearPdfCache();
         set({ ...initialData });
         useEditorStore.temporal.getState().clear();
+        clearSession();
       },
     }),
     {

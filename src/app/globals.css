@@ -102,4 +102,9 @@
   html {
     @apply font-sans;
   }
+  /* inside the base layer so utilities like cursor-grab / cursor-move still win */
+  button:not(:disabled),
+  [role="button"]:not([aria-disabled="true"]) {
+    cursor: pointer;
+  }
 }

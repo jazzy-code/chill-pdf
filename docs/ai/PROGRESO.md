@@ -8,7 +8,7 @@ Marca `[x]` al terminar cada fase (build + lint OK + checklist verificado) y agr
 - [x] F3 · Fusionar y exportar
 - [x] F4 · Texto
 - [x] F5 · Imágenes
-- [ ] F6 · Pulido
+- [x] F6 · Pulido
 
 ## Notas / desviaciones
 - **F0**: Next.js 16.4.6 + React 19.3 + Tailwind 4.3. El template trae `cacheComponents` y `partialPrefetching` activos en `next.config.ts` (se dejaron; ojo con `next/dynamic` y `ssr:false` en F1). El template genera `AGENTS.md` ("Next.js con cambios incompatibles: leer `node_modules/next/dist/docs/`"), que se descartó; `next dev` puede volver a crearlo.
@@ -19,6 +19,12 @@ Marca `[x]` al terminar cada fase (build + lint OK + checklist verificado) y agr
 - **F1**: `PdfCanvas` rellena a su padre (que fija el tamaño = placeholder) y renderiza en un canvas nuevo que sustituye al anterior al terminar (sin parpadeo al hacer zoom). Su IntersectionObserver usa como `root` el contenedor con scroll (si no, `rootMargin` no aplica) y libera el canvas al salir de vista.
 - **F1**: página activa = la que ocupa más alto visible (IO con umbrales 0–1), no solo `threshold 0.5`, para que funcione con páginas más altas que el visor. El zoom mantiene anclada la página superior; Ctrl+rueda acumula `deltaY` (suaviza el pinch del trackpad).
 - **F1**: el store ya incluye todas las acciones de `00-CONTEXTO.md` (`appendFiles`, `deletePage`, `movePage`, anotaciones) en versión básica; F2/F3 solo tienen que conectarlas a la UI y añadir toasts/undo.
+- **F6 (petición del usuario)**: botón **Nuevo** junto a Descargar (y el logo) → `NewDocumentDialog` (confirmación siempre: una sesión restaurada tiene cambios aunque el historial esté vacío) → `reset()`, que también borra la sesión guardada. Sustituye al `window.confirm` del logo.
+- **F6**: sesión en IndexedDB (`lib/session.ts` + `hooks/useSessionPersistence.ts`, `idb-keyval`): guarda 1 s después de cada cambio, solo los `sources` que siguen en uso, e intenta guardar también al cerrar la pestaña. `ResumeCard` en la portada → `restoreSession()`. Si IndexedDB falla (modo privado, sin espacio) la app sigue funcionando; solo se pierde poder reanudar.
+- **F6**: `Ctrl+S` funciona también escribiendo un texto (lo confirma antes de descargar). Indicador de carga en miniaturas y páginas solo con CSS: queda debajo del canvas y este lo tapa al dibujarse.
+- **F6**: responsive: < 768 px barra lateral `w-28` y miniaturas de 80 px (`useMediaQuery`); en móvil el logo se oculta (Nuevo hace lo mismo), la barra central usa `justify-center-safe` y se desliza; papelera siempre visible en pantallas táctiles. La etiqueta «Nuevo» aparece desde `xl` para no desbordar a 1024 px.
+- **F6**: `cursor: pointer` global para botones movido dentro de `@layer base` (fuera de capa pisaba `cursor-grab` de las miniaturas). Favicon `src/app/icon.svg` y `themeColor` con colores fijos (los SVG y metadatos no leen variables CSS); se borró `favicon.ico`.
+- **Aviso dev**: instalar dependencias con `pnpm dev` encendido puede dejar a Turbopack sin vigilar `globals.css` (sirve CSS viejo). Solución: reiniciar `pnpm dev`.
 - **F5**: soltar imágenes lo gestiona `FileDropZone` (no `PageView`): la imagen va a la página y al punto bajo el cursor; los PDF se siguen añadiendo al final. Durante el arrastre solo se leen los tipos MIME, así que el aviso cambia a «Suelta la imagen sobre una página» y no tapa las páginas.
 - **F5**: `normalizeImage` pasa SIEMPRE por canvas (también los JPEG) para fijar la orientación EXIF en los píxeles; pdf-lib ignora EXIF y la foto saldría girada.
 - **F5**: el orden del array `annotations` es el apilado en pantalla y en la exportación. El texto ya no sube de z-index al seleccionarlo, solo mientras se edita. `reorderAnnotation(id, 'front' | 'back')` no crea entrada de historial si no cambia nada.

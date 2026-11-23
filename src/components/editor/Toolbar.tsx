@@ -1,5 +1,5 @@
 'use client';
-import type { ReactElement, ReactNode } from 'react';
+import { useState, type ReactElement, type ReactNode } from 'react';
 import {
   ChevronDown,
   Download,
@@ -11,6 +11,7 @@ import {
   MoveHorizontal,
   Plus,
   Redo2,
+  SquarePlus,
   Type,
   Undo2,
 } from 'lucide-react';
@@ -24,6 +25,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Separator } from '@/components/ui/separator';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
+import NewDocumentDialog from '@/components/editor/NewDocumentDialog';
 import { VIEWER_ID } from '@/components/editor/Viewer';
 import { useStore } from 'zustand';
 import { cn } from '@/lib/utils';
@@ -70,6 +72,7 @@ function ToolButton({
           'rounded-xl',
           active && 'bg-secondary text-secondary-foreground hover:bg-secondary hover:text-secondary-foreground'
         )}
+        aria-label={label}
         aria-pressed={active}
         disabled={disabled}
         onClick={onClick}
@@ -85,11 +88,13 @@ function IconButton({
   icon,
   tooltip,
   disabled,
+  className,
   onClick,
 }: {
   icon: ReactNode;
   tooltip: string;
   disabled?: boolean;
+  className?: string;
   onClick?: () => void;
 }) {
   return (
@@ -97,7 +102,7 @@ function IconButton({
       <Button
         variant="ghost"
         size="icon-lg"
-        className="rounded-xl"
+        className={cn('rounded-xl', className)}
         aria-label={tooltip}
         disabled={disabled}
         onClick={onClick}
@@ -120,23 +125,22 @@ export function fitToWidth() {
 export default function Toolbar() {
   const zoom = useEditorStore((s) => s.zoom);
   const setZoom = useEditorStore((s) => s.setZoom);
-  const reset = useEditorStore((s) => s.reset);
   const isExporting = useEditorStore((s) => s.isExporting);
   const tool = useEditorStore((s) => s.tool);
   const canUndo = useStore(useEditorStore.temporal, (s) => s.pastStates.length > 0);
   const canRedo = useStore(useEditorStore.temporal, (s) => s.futureStates.length > 0);
 
-  const closeDocument = () => {
-    if (window.confirm('¿Cerrar este documento? Perderás los cambios')) reset();
-  };
+  // Always confirm: a restored session has edits even with an empty undo history
+  const [confirmNew, setConfirmNew] = useState(false);
+  const startOver = () => setConfirmNew(true);
 
   return (
-    <header className="flex h-16 shrink-0 items-center gap-3 border-b bg-card px-4">
+    <header className="flex h-16 shrink-0 items-center gap-2 border-b bg-card px-3 sm:gap-3 sm:px-4">
       <button
         type="button"
-        onClick={closeDocument}
-        className="flex items-center gap-2 rounded-xl px-1 py-1 outline-none focus-visible:ring-2 focus-visible:ring-ring"
-        aria-label="Chill PDF: cerrar documento"
+        onClick={startOver}
+        className="hidden shrink-0 items-center gap-2 rounded-xl px-1 py-1 outline-none focus-visible:ring-2 focus-visible:ring-ring sm:flex"
+        aria-label="Chill PDF: empezar con otro documento"
       >
         <span className="flex size-9 -rotate-6 items-center justify-center rounded-xl bg-accent text-accent-foreground">
           <FileText className="size-5" />
@@ -144,7 +148,7 @@ export default function Toolbar() {
         <span className="hidden font-display text-xl font-bold sm:inline">Chill PDF</span>
       </button>
 
-      <div className="flex flex-1 items-center justify-center gap-1">
+      <div className="flex min-w-0 flex-1 items-center justify-center-safe gap-1 overflow-x-auto [scrollbar-width:none]">
         <ToolButton
           icon={<FilePlus2 />}
           label="Añadir PDF"
@@ -169,23 +173,24 @@ export default function Toolbar() {
           onClick={pickAndInsertImage}
         />
 
-        <Separator orientation="vertical" className="mx-2 h-6!" />
+        <Separator orientation="vertical" className="mx-2 hidden h-6! sm:block" />
 
         <IconButton icon={<Undo2 />} tooltip="Deshacer (Ctrl+Z)" disabled={!canUndo} onClick={undo} />
         <IconButton icon={<Redo2 />} tooltip="Rehacer (Ctrl+Y)" disabled={!canRedo} onClick={redo} />
 
-        <Separator orientation="vertical" className="mx-2 h-6!" />
+        <Separator orientation="vertical" className="mx-2 hidden h-6! sm:block" />
 
         <IconButton
           icon={<Minus />}
           tooltip="Alejar (Ctrl+rueda)"
+          className="hidden sm:inline-flex"
           disabled={zoom <= 0.25}
           onClick={() => setZoom(zoom - 0.1)}
         />
         <DropdownMenu>
           <DropdownMenuTrigger
             render={
-              <Button variant="ghost" className="w-20 rounded-xl tabular-nums" aria-label="Nivel de zoom">
+              <Button variant="ghost" className="w-20 shrink-0 rounded-xl tabular-nums" aria-label="Nivel de zoom">
                 {Math.round(zoom * 100)}%
                 <ChevronDown className="text-muted-foreground" />
               </Button>
@@ -207,20 +212,38 @@ export default function Toolbar() {
         <IconButton
           icon={<Plus />}
           tooltip="Acercar (Ctrl+rueda)"
+          className="hidden sm:inline-flex"
           disabled={zoom >= 3}
           onClick={() => setZoom(zoom + 0.1)}
         />
       </div>
 
+      <WithTooltip label="Cerrar este documento y empezar con otro">
+        <Button
+          variant="outline"
+          className="h-11 shrink-0 rounded-full px-4 font-semibold"
+          aria-label="Nuevo documento"
+          onClick={startOver}
+        >
+          <SquarePlus />
+          <span className="hidden xl:inline">Nuevo</span>
+        </Button>
+      </WithTooltip>
+
+      <WithTooltip label="Descargar PDF (Ctrl+S)">
       <Button
         size="lg"
-        className="h-11 rounded-full px-6 font-bold shadow-sm transition hover:-translate-y-0.5 hover:shadow-md"
+        className="h-11 shrink-0 rounded-full px-4 font-bold shadow-sm transition hover:-translate-y-0.5 hover:shadow-md sm:px-6"
+        aria-label="Descargar PDF"
         disabled={isExporting}
         onClick={downloadDocument}
       >
         {isExporting ? <Loader2 className="animate-spin" /> : <Download />}
         <span className="hidden sm:inline">{isExporting ? 'Preparando…' : 'Descargar'}</span>
       </Button>
+      </WithTooltip>
+
+      <NewDocumentDialog open={confirmNew} onOpenChange={setConfirmNew} />
     </header>
   );
 }

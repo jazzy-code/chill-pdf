@@ -11,7 +11,12 @@ import {
   type DragStartEvent,
 } from '@dnd-kit/core';
 import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable';
-import PageThumbnail, { ThumbnailPreview } from '@/components/editor/PageThumbnail';
+import PageThumbnail, {
+  THUMB_WIDTH,
+  THUMB_WIDTH_SMALL,
+  ThumbnailPreview,
+} from '@/components/editor/PageThumbnail';
+import { useMediaQuery } from '@/hooks/useMediaQuery';
 import { Plus } from 'lucide-react';
 import { pickAndAppendPdfs, useEditorStore } from '@/store/editor-store';
 
@@ -24,6 +29,7 @@ export default function PagesSidebar() {
   const deletePage = useEditorStore((s) => s.deletePage);
   const movePage = useEditorStore((s) => s.movePage);
   const [draggingId, setDraggingId] = useState<string | null>(null);
+  const thumbWidth = useMediaQuery('(min-width: 768px)') ? THUMB_WIDTH : THUMB_WIDTH_SMALL;
 
   const [announcement, setAnnouncement] = useState('');
 
@@ -85,7 +91,7 @@ export default function PagesSidebar() {
     <aside
       ref={ref}
       aria-label="Páginas"
-      className="w-56 shrink-0 overflow-y-auto border-r bg-card px-4 py-6"
+      className="w-28 shrink-0 overflow-y-auto border-r bg-card px-3 py-6 md:w-56 md:px-4"
     >
       <DndContext
         sensors={sensors}
@@ -117,6 +123,7 @@ export default function PagesSidebar() {
                 page={page}
                 source={sources[page.sourceId]}
                 index={i}
+                width={thumbWidth}
                 active={page.id === activePageId}
                 onSelect={goTo}
                 onDelete={deletePage}
@@ -130,6 +137,7 @@ export default function PagesSidebar() {
             <ThumbnailPreview
               page={draggingPage}
               source={sources[draggingPage.sourceId]}
+              width={thumbWidth}
               className="scale-105 cursor-grabbing shadow-lg ring-2 ring-primary"
             />
           ) : null}
@@ -138,7 +146,7 @@ export default function PagesSidebar() {
       <button
         type="button"
         onClick={pickAndAppendPdfs}
-        className="mx-auto mt-6 flex w-40 flex-col items-center justify-center gap-1.5 rounded-xl border-2 border-dashed border-primary/40 py-6 text-sm font-semibold text-muted-foreground transition-colors duration-150 outline-none hover:border-primary hover:bg-accent/40 hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring"
+        className="mx-auto mt-6 flex w-full max-w-40 flex-col items-center justify-center gap-1.5 rounded-xl border-2 border-dashed border-primary/40 py-6 text-sm font-semibold text-muted-foreground transition-colors duration-150 outline-none hover:border-primary hover:bg-accent/40 hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring"
       >
         <Plus className="size-5 text-primary" />
         Añadir PDF
