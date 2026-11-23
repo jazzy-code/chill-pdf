@@ -4,7 +4,6 @@ import {
   ChevronDown,
   Download,
   FilePlus2,
-  FileText,
   ImagePlus,
   Loader2,
   Minus,
@@ -15,6 +14,8 @@ import {
   Type,
   Undo2,
 } from 'lucide-react';
+import Image from 'next/image';
+import mascot from '../../../public/icon.png'; // static import: hashed URL (no clash with app/icon.png) + intrinsic size
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
@@ -142,9 +143,7 @@ export default function Toolbar() {
         className="hidden shrink-0 items-center gap-2 rounded-xl px-1 py-1 outline-none focus-visible:ring-2 focus-visible:ring-ring sm:flex"
         aria-label="Chill PDF: empezar con otro documento"
       >
-        <span className="flex size-9 -rotate-6 items-center justify-center rounded-xl bg-accent text-accent-foreground">
-          <FileText className="size-5" />
-        </span>
+        <Image src={mascot} alt="" sizes="48px" className="h-10 w-auto" />
         <span className="hidden font-display text-xl font-bold sm:inline">Chill PDF</span>
       </button>
 

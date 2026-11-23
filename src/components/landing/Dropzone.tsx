@@ -1,6 +1,8 @@
 'use client';
 import { useRef, useState, type DragEvent } from 'react';
-import { ArrowUpDown, FileText, Loader2, Trash2, Type, Upload } from 'lucide-react';
+import Image from 'next/image';
+import mascot from '../../../public/icon.png'; // static import: hashed URL (no clash with app/icon.png) + intrinsic size
+import { ArrowUpDown, Loader2, Trash2, Type, Upload } from 'lucide-react';
 import ResumeCard from '@/components/landing/ResumeCard';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
@@ -50,9 +52,13 @@ export default function Dropzone() {
 
       <div className="relative w-full max-w-2xl text-center">
         <div className="flex items-center justify-center gap-3">
-          <span className="flex size-14 -rotate-6 items-center justify-center rounded-2xl bg-accent text-accent-foreground shadow-sm">
-            <FileText className="size-8" />
-          </span>
+          <Image
+            src={mascot}
+            alt=""
+            sizes="(min-width: 768px) 112px, 88px"
+            preload
+            className="h-[4.5rem] w-auto md:h-24"
+          />
           <h1 className="font-display text-5xl font-bold tracking-tight md:text-6xl">Chill PDF</h1>
         </div>
         <p className="mx-auto mt-4 max-w-md text-lg text-muted-foreground">

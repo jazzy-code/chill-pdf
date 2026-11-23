@@ -23,6 +23,11 @@ export const metadata: Metadata = {
   title: "Chill PDF — Editor de PDF",
   description: DESCRIPTION,
   applicationName: "Chill PDF",
+  // square versions of the mascot (public/icon.png), generated so they don't clash with /icon.png
+  icons: {
+    icon: { url: "/favicon.png", type: "image/png", sizes: "192x192" },
+    apple: { url: "/apple-touch-icon.png", sizes: "180x180" },
+  },
   keywords: ["editor PDF", "unir PDF", "reordenar páginas", "eliminar páginas", "añadir texto a PDF"],
   openGraph: {
     title: "Chill PDF — Editor de PDF",
