@@ -143,7 +143,11 @@ export default function Toolbar() {
         className="hidden shrink-0 items-center gap-2 rounded-xl px-1 py-1 outline-none focus-visible:ring-2 focus-visible:ring-ring sm:flex"
         aria-label="Chill PDF: empezar con otro documento"
       >
-        <Image src={mascot} alt="" sizes="48px" className="h-10 w-auto" />
+        {/* only the yellow card is tilted; the mascot is already leaning */}
+        <span className="relative flex size-11 shrink-0 items-center justify-center">
+          <span className="absolute inset-0 -rotate-6 rounded-xl bg-accent" />
+          <Image src={mascot} alt="" sizes="40px" className="relative h-8 w-auto" />
+        </span>
         <span className="hidden font-display text-xl font-bold sm:inline">Chill PDF</span>
       </button>
 

@@ -52,17 +52,20 @@ export default function Dropzone() {
 
       <div className="relative w-full max-w-2xl text-center">
         <div className="flex items-center justify-center gap-3">
-          <Image
-            src={mascot}
-            alt=""
-            sizes="(min-width: 768px) 112px, 88px"
-            preload
-            className="h-[4.5rem] w-auto md:h-24"
-          />
+          <span className="relative flex size-20 shrink-0 items-center justify-center md:size-24">
+            <span className="absolute inset-0 -rotate-6 rounded-2xl bg-accent shadow-sm" />
+            <Image
+              src={mascot}
+              alt=""
+              sizes="(min-width: 768px) 88px, 72px"
+              preload
+              className="relative h-14 w-auto md:h-[4.5rem]"
+            />
+          </span>
           <h1 className="font-display text-5xl font-bold tracking-tight md:text-6xl">Chill PDF</h1>
         </div>
         <p className="mx-auto mt-4 max-w-md text-lg text-muted-foreground">
-          Edita tus PDF sin estrés. Todo pasa en tu navegador, nada se sube a ningún servidor.
+          Edita tus PDF sin estrés. Elimina páginas, reordena, fusiona PDF&apos;s, inserta texto o imagenes y más..
         </p>
 
         <ResumeCard />
