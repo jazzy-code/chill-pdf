@@ -91,7 +91,8 @@ export default function PagesSidebar() {
     <aside
       ref={ref}
       aria-label="Páginas"
-      className="w-28 shrink-0 overflow-y-auto border-r bg-card px-3 py-6 md:w-56 md:px-4"
+      // relative: contains the absolute sr-only live region (otherwise it escapes the scroll and stretches the page)
+      className="relative w-28 shrink-0 overflow-y-auto border-r bg-card px-3 py-6 md:w-56 md:px-4"
     >
       <DndContext
         sensors={sensors}
