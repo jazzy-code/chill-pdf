@@ -1,5 +1,5 @@
 'use client';
-import { useState, type ReactElement, type ReactNode } from 'react';
+import { useEffect, useState, type ReactElement, type ReactNode } from 'react';
 import {
   ChevronDown,
   Download,
@@ -135,8 +135,24 @@ export default function Toolbar() {
   const [confirmNew, setConfirmNew] = useState(false);
   const startOver = () => setConfirmNew(true);
 
+  // soft shadow under the bar once the pages scroll beneath it
+  const [scrolled, setScrolled] = useState(false);
+  useEffect(() => {
+    const viewer = document.getElementById(VIEWER_ID);
+    if (!viewer) return;
+    const onScroll = () => setScrolled(viewer.scrollTop > 0);
+    onScroll();
+    viewer.addEventListener('scroll', onScroll, { passive: true });
+    return () => viewer.removeEventListener('scroll', onScroll);
+  }, []);
+
   return (
-    <header className="flex h-16 shrink-0 items-center gap-2 border-b bg-card px-3 sm:gap-3 sm:px-4">
+    <header
+      className={cn(
+        'relative z-20 flex h-16 shrink-0 items-center gap-2 border-b bg-card px-3 transition-shadow duration-200 sm:gap-3 sm:px-4',
+        scrolled && 'shadow-md'
+      )}
+    >
       <button
         type="button"
         onClick={startOver}
