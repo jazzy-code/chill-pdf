@@ -1,5 +1,6 @@
 'use client';
 import { memo, useEffect, useRef, useState, type CSSProperties } from 'react';
+import { flushSync } from 'react-dom';
 import { Rnd } from 'react-rnd';
 import { cssFontFamily } from '@/lib/fonts';
 import { LINE_HEIGHT, layoutText } from '@/lib/text-layout';
@@ -8,6 +9,7 @@ import { useEditorStore } from '@/store/editor-store';
 import type { TextAnnotation as TextAnnotationType } from '@/types/editor';
 
 const MIN_WIDTH = 24; // PDF points
+const TAP_SLOP = 4; // px of movement still counted as a tap (not a drag)
 
 const handle = (
   <span className="absolute top-1/2 left-1/2 block size-3 -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-primary bg-card shadow-sm" />
@@ -26,6 +28,8 @@ function TextAnnotation({ a, zoom }: Props) {
   const [draft, setDraft] = useState(a.text);
   const [liveWidth, setLiveWidth] = useState<number | null>(null); // during resize (points)
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  // pointer-down state of the current tap: was the box already selected, and where it started
+  const tap = useRef<{ x: number; y: number; wasSelected: boolean } | null>(null);
 
   // entering edit mode: start from the stored text, focus at the end
   useEffect(() => {
@@ -62,9 +66,16 @@ function TextAnnotation({ a, zoom }: Props) {
   };
 
   const startEditing = () => {
-    setDraft(a.text);
-    select(a.id);
-    setEditing(a.id);
+    // render the textarea synchronously and focus it inside the user gesture (mobile keyboards
+    // only open for focus() called during the tap)
+    flushSync(() => {
+      setDraft(a.text);
+      select(a.id);
+      setEditing(a.id);
+    });
+    const el = textareaRef.current;
+    el?.focus();
+    el?.setSelectionRange(el.value.length, el.value.length);
   };
 
   return (
@@ -106,6 +117,22 @@ function TextAnnotation({ a, zoom }: Props) {
     >
       <div
         className="h-full w-full"
+        // Pointer events (not mouse/click): react-draggable cancels touchstart, so on touch screens
+        // no mousedown/click/dblclick ever arrives. Tap = select; tap again on a selected box = edit.
+        onPointerDown={(e) => {
+          if (editing || !e.isPrimary) return;
+          const wasSelected = useEditorStore.getState().selectedId === a.id;
+          tap.current = { x: e.clientX, y: e.clientY, wasSelected };
+          if (!wasSelected) select(a.id);
+        }}
+        onPointerUp={(e) => {
+          const t = tap.current;
+          tap.current = null;
+          if (!t || editing) return;
+          const moved = Math.hypot(e.clientX - t.x, e.clientY - t.y) > TAP_SLOP;
+          if (!moved && t.wasSelected) startEditing();
+        }}
+        onPointerCancel={() => (tap.current = null)}
         onClick={(e) => e.stopPropagation()}
         onDoubleClick={(e) => {
           e.stopPropagation();

@@ -68,6 +68,10 @@ function ImageAnnotation({ a, zoom }: Props) {
     >
       <div
         className="h-full w-full"
+        // react-draggable cancels touchstart → no mousedown on touch screens; select on pointerdown
+        onPointerDown={(e) => {
+          if (e.isPrimary && !selected) select(a.id);
+        }}
         onClick={(e) => e.stopPropagation()}
         onDoubleClick={(e) => {
           e.stopPropagation();

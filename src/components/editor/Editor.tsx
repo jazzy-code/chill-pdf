@@ -14,10 +14,13 @@ export default function Editor() {
   return (
     <div className="flex h-dvh flex-col">
       <Toolbar />
-      <PropertiesBar />
       <FileDropZone>
         <PagesSidebar />
-        <Viewer />
+        {/* the properties bar floats over the viewer: selecting must never shift the layout */}
+        <div className="relative flex min-w-0 flex-1">
+          <Viewer />
+          <PropertiesBar />
+        </div>
       </FileDropZone>
       <CropDialog />
     </div>

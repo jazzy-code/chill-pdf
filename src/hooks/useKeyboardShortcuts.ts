@@ -28,7 +28,9 @@ export function useKeyboardShortcuts() {
       if (isEditableTarget(document.activeElement)) return;
       if (useEditorStore.getState().croppingId) return; // crop dialog open: it owns the keyboard
       const mod = e.ctrlKey || e.metaKey;
-      const key = e.key.toLowerCase();
+      // typed letter (respects QWERTZ/AZERTY); physical key only on non-Latin layouts
+      const typed = e.key.toLowerCase();
+      const key = /^[a-z]$/.test(typed) || !e.code.startsWith('Key') ? typed : e.code.slice(3).toLowerCase();
 
       if (mod && key === 'z' && !e.shiftKey) {
         e.preventDefault();

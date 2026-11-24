@@ -58,7 +58,7 @@ function Tip({ label, children }: { label: ReactNode; children: ReactElement }) 
 }
 
 const BAR_CLASS =
-  'flex h-12 shrink-0 items-center justify-center gap-2 overflow-x-auto border-b bg-card px-4 animate-in fade-in slide-in-from-top-1 duration-200';
+  'pointer-events-auto flex h-12 max-w-full items-center gap-2 overflow-x-auto rounded-2xl border bg-card px-3 shadow-md [scrollbar-width:none] animate-in fade-in slide-in-from-top-1 duration-200';
 
 export default function PropertiesBar() {
   const selected = useEditorStore((s) => s.annotations.find((a) => a.id === s.selectedId)) as
@@ -66,7 +66,12 @@ export default function PropertiesBar() {
     | undefined;
 
   if (!selected) return null;
-  return selected.type === 'text' ? <TextProperties a={selected} /> : <ImageProperties a={selected} />;
+  return (
+    // floating over the top of the viewer (never pushes the pages); the wrapper ignores the pointer
+    <div className="pointer-events-none absolute inset-x-3 top-3 z-40 flex justify-center-safe">
+      {selected.type === 'text' ? <TextProperties a={selected} /> : <ImageProperties a={selected} />}
+    </div>
+  );
 }
 
 function ImageProperties({ a }: { a: ImageAnnotation }) {
