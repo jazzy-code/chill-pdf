@@ -2,6 +2,7 @@
 import dynamic from 'next/dynamic';
 import { Loader2 } from 'lucide-react';
 import Dropzone from '@/components/landing/Dropzone';
+import LandingInfo from '@/components/landing/LandingInfo';
 import { useEditorStore } from '@/store/editor-store';
 
 const Editor = dynamic(() => import('@/components/editor/Editor'), {
@@ -15,5 +16,12 @@ const Editor = dynamic(() => import('@/components/editor/Editor'), {
 
 export default function Home() {
   const hasDocument = useEditorStore((s) => s.pages.length > 0);
-  return hasDocument ? <Editor /> : <Dropzone />;
+  return hasDocument ? (
+    <Editor />
+  ) : (
+    <>
+      <Dropzone />
+      <LandingInfo />
+    </>
+  );
 }
